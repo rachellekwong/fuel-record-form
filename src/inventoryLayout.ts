@@ -38,3 +38,6 @@ export const INVENTORY_METER_DEFS: InventoryMeterDef[] = GROUPS.flatMap((group) 
 );
 
 export const INVENTORY_TANKS = ["1", "2", "3", "4", "5", "6"] as const;
+
+/** Meter / tank selector for refueling forms (sections 2–5) */
+export const METER_CODE_OPTIONS = ["1", "2", "2A", "3", "3A", "4", "4A", "5", "6"];

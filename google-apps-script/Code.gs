@@ -27,6 +27,16 @@ function doPost(e) {
   }
 }
 
+function cellValue_(value) {
+  if (value === null || value === undefined) return "";
+  var s = String(value);
+  // Meter codes like 2A, 3A, 4A must be text or Sheets treats them as cell references
+  if (/^\d+[A-Za-z]$/.test(s)) {
+    return "'" + s;
+  }
+  return s;
+}
+
 function writeInventory_(ss, data) {
   const sheet = ss.getSheetByName("Inventory");
   if (!sheet) throw new Error('Sheet tab "Inventory" not found');
@@ -36,16 +46,16 @@ function writeInventory_(ss, data) {
     var closing =
       (payload.tankClosingBalances && payload.tankClosingBalances[row.tank]) || "";
     sheet.appendRow([
-      data.submittedAt,
-      payload.date,
-      row.fuelType,
-      row.meterCode,
-      row.tank,
-      row.yesterdayReading,
-      row.todayReading,
-      closing,
-      payload.signature,
-      data.remarks || "",
+      cellValue_(data.submittedAt),
+      cellValue_(payload.date),
+      cellValue_(row.fuelType),
+      cellValue_(row.meterCode),
+      cellValue_(row.tank),
+      cellValue_(row.yesterdayReading),
+      cellValue_(row.todayReading),
+      cellValue_(closing),
+      cellValue_(payload.signature),
+      cellValue_(data.remarks),
     ]);
   });
 }
@@ -68,21 +78,21 @@ function writeDynamic_(ss, data) {
   entries.forEach(function (entry) {
     if (data.recordType === "received") {
       sheet.appendRow([
-        data.submittedAt,
-        entry.licensePlate,
-        entry.quantity,
-        entry.fuelType,
-        entry.tankNumber || "",
-        data.remarks || "",
+        cellValue_(data.submittedAt),
+        cellValue_(entry.licensePlate),
+        cellValue_(entry.quantity),
+        cellValue_(entry.fuelType),
+        cellValue_(entry.tankNumber),
+        cellValue_(data.remarks),
       ]);
     } else {
       sheet.appendRow([
-        data.submittedAt,
-        entry.licensePlate,
-        entry.quantity,
-        entry.fuelType,
-        entry.meterCode,
-        data.remarks || "",
+        cellValue_(data.submittedAt),
+        cellValue_(entry.licensePlate),
+        cellValue_(entry.quantity),
+        cellValue_(entry.fuelType),
+        cellValue_(entry.meterCode),
+        cellValue_(data.remarks),
       ]);
     }
   });

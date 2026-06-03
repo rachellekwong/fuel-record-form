@@ -6,7 +6,7 @@ import type {
   InventoryRow,
   RecordType,
 } from "./types";
-import { INVENTORY_METER_DEFS, INVENTORY_TANKS } from "./inventoryLayout";
+import { INVENTORY_METER_DEFS, INVENTORY_TANKS, METER_CODE_OPTIONS } from "./inventoryLayout";
 
 const RECORD_TYPES: { value: RecordType; label: string }[] = [
   { value: "inventory", label: "油錶 (Oil Meter)" },
@@ -652,17 +652,22 @@ export default function App() {
                           <Label htmlFor={`tank-${entry.id}`} required>
                             油缸 <span className="font-normal text-slate-500">(Tank Number)</span>
                           </Label>
-                          <input
+                          <select
                             id={`tank-${entry.id}`}
-                            type="text"
                             value={entry.tankNumber}
                             onChange={(e) =>
                               updateDynamicEntry(entry.id, "tankNumber", e.target.value)
                             }
                             className={`${inputBase} ${errors[`tank-${entry.id}`] ? inputError : ""}`}
-                            placeholder="—"
                             aria-required="true"
-                          />
+                          >
+                            <option value="">— 請選擇 / Please select —</option>
+                            {METER_CODE_OPTIONS.map((code) => (
+                              <option key={code} value={code}>
+                                {code}
+                              </option>
+                            ))}
+                          </select>
                           <FieldError message={errors[`tank-${entry.id}`]} />
                         </div>
                       ) : (
@@ -670,17 +675,22 @@ export default function App() {
                           <Label htmlFor={`meter-${entry.id}`} required>
                             油錶編號 <span className="font-normal text-slate-500">(Meter Code)</span>
                           </Label>
-                          <input
+                          <select
                             id={`meter-${entry.id}`}
-                            type="text"
                             value={entry.meterCode}
                             onChange={(e) =>
                               updateDynamicEntry(entry.id, "meterCode", e.target.value)
                             }
                             className={`${inputBase} ${errors[`meter-${entry.id}`] ? inputError : ""}`}
-                            placeholder="—"
                             aria-required="true"
-                          />
+                          >
+                            <option value="">— 請選擇 / Please select —</option>
+                            {METER_CODE_OPTIONS.map((code) => (
+                              <option key={code} value={code}>
+                                {code}
+                              </option>
+                            ))}
+                          </select>
                           <FieldError message={errors[`meter-${entry.id}`]} />
                         </div>
                       )}

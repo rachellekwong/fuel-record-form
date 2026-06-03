@@ -79,3 +79,4 @@ npm run dev
 - **Tab not found:** Tab names are case-sensitive (`SelfUse`, not `Self Use`)
 - **No rows after submit:** Redeploy Apps Script after code changes (New deployment → new version)
 - **CORS / network errors:** Use the `/exec` URL from a **Web app** deployment with **Anyone** access
+- **Rows misaligned (2A / 3A / 4A):** Redeploy the latest Apps Script (meter codes like `2A` must be saved as text). Confirm Inventory row 1 has exactly 10 columns in the order above — **Fuel Type** (B5, 白渣, …) in column C, **Meter No.** (1, 2, 2A, …) in column D.
