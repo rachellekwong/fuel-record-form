@@ -33,14 +33,17 @@ function writeInventory_(ss, data) {
 
   const payload = data.payload;
   payload.rows.forEach(function (row) {
+    var closing =
+      (payload.tankClosingBalances && payload.tankClosingBalances[row.tank]) || "";
     sheet.appendRow([
       data.submittedAt,
       payload.date,
+      row.fuelType,
       row.meterCode,
       row.tank,
       row.yesterdayReading,
       row.todayReading,
-      row.height,
+      closing,
       payload.signature,
       data.remarks || "",
     ]);

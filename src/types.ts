@@ -6,11 +6,12 @@ export type RecordType =
   | "received";
 
 export interface InventoryRow {
+  rowId: string;
+  fuelType: string;
   meterCode: string;
   yesterdayReading: string;
   todayReading: string;
   tank: string;
-  height: string;
 }
 
 export interface DynamicEntry {
@@ -25,6 +26,7 @@ export interface DynamicEntry {
 export interface InventoryPayload {
   date: string;
   rows: InventoryRow[];
+  tankClosingBalances: Record<string, string>;
   signature: string;
 }
 

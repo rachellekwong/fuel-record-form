@@ -6,11 +6,10 @@ import type {
   InventoryRow,
   RecordType,
 } from "./types";
-
-const INVENTORY_ROW_LABELS = ["B5", "白渣", "紅渣", "B100", "電油", "HVO"];
+import { INVENTORY_METER_DEFS, INVENTORY_TANKS } from "./inventoryLayout";
 
 const RECORD_TYPES: { value: RecordType; label: string }[] = [
-  { value: "inventory", label: "油桶 & 缸存記錄 (Oil Barrel & Tank Inventory)" },
+  { value: "inventory", label: "油錶 (Oil Meter)" },
   { value: "company", label: "公司車輛上油記錄 (Company Vehicles Refueling)" },
   { value: "self-use", label: "自用燃油記錄 (Self-Use Fuel)" },
   { value: "customer", label: "客戶車輛上油記錄 (Customer Vehicles Refueling)" },
@@ -60,13 +59,18 @@ function newId(): string {
 }
 
 function createInventoryRows(): InventoryRow[] {
-  return INVENTORY_ROW_LABELS.map((label, index) => ({
-    meterCode: label,
+  return INVENTORY_METER_DEFS.map((def) => ({
+    rowId: def.rowId,
+    fuelType: def.fuelType,
+    meterCode: def.meterCode,
     yesterdayReading: "",
     todayReading: "",
-    tank: String(index + 1),
-    height: "",
+    tank: def.tank,
   }));
+}
+
+function createTankClosingBalances(): Record<string, string> {
+  return Object.fromEntries(INVENTORY_TANKS.map((t) => [t, ""]));
 }
 
 function createDynamicEntry(): DynamicEntry {
@@ -119,6 +123,9 @@ export default function App() {
   const [recordType, setRecordType] = useState<RecordType | "">("");
   const [inventoryDate, setInventoryDate] = useState(todayDateString());
   const [inventoryRows, setInventoryRows] = useState<InventoryRow[]>(createInventoryRows);
+  const [tankClosingBalances, setTankClosingBalances] = useState<Record<string, string>>(
+    createTankClosingBalances
+  );
   const [signature, setSignature] = useState("");
   const [dynamicEntries, setDynamicEntries] = useState<DynamicEntry[]>([createDynamicEntry()]);
   const [submissionDateTime, setSubmissionDateTime] = useState(nowDateTimeLocal());
@@ -147,6 +154,7 @@ export default function App() {
     if (recordType === "inventory") {
       setInventoryDate(todayDateString());
       setInventoryRows(createInventoryRows());
+      setTankClosingBalances(createTankClosingBalances());
       setSignature("");
     } else {
       setDynamicEntries([createDynamicEntry()]);
@@ -154,13 +162,17 @@ export default function App() {
   }, [recordType]);
 
   const updateInventoryRow = (
-    index: number,
-    field: keyof InventoryRow,
+    rowId: string,
+    field: "yesterdayReading" | "todayReading",
     value: string
   ) => {
     setInventoryRows((rows) =>
-      rows.map((row, i) => (i === index ? { ...row, [field]: value } : row))
+      rows.map((row) => (row.rowId === rowId ? { ...row, [field]: value } : row))
     );
+  };
+
+  const updateTankClosingBalance = (tank: string, value: string) => {
+    setTankClosingBalances((prev) => ({ ...prev, [tank]: value }));
   };
 
   const addDynamicEntry = () => {
@@ -202,9 +214,9 @@ export default function App() {
       if (!inventoryDate) {
         next.inventoryDate = "請填寫日期 / Date is required";
       }
-      inventoryRows.forEach((row, i) => {
+      inventoryRows.forEach((row) => {
         if (!row.todayReading.trim()) {
-          next[`inv-today-${i}`] = "必填 / Required";
+          next[`inv-today-${row.rowId}`] = "必填 / Required";
         }
       });
       if (!signature.trim()) {
@@ -263,6 +275,7 @@ export default function App() {
           ? {
               date: inventoryDate,
               rows: inventoryRows,
+              tankClosingBalances,
               signature,
             }
           : {
@@ -286,6 +299,7 @@ export default function App() {
 
       if (recordType === "inventory") {
         setInventoryRows(createInventoryRows());
+        setTankClosingBalances(createTankClosingBalances());
         setSignature("");
         setInventoryDate(todayDateString());
       } else {
@@ -368,7 +382,11 @@ export default function App() {
               className="animate-in rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6"
               aria-labelledby="inventory-heading"
             >
-              {sectionTitle("油桶 & 缸存記錄", "Oil Barrel & Tank Inventory")}
+              {sectionTitle("油錶", "Oil Meter")}
+              <p className="mb-4 text-sm text-slate-500">
+                葵涌倉錶碼及缸存記錄{" "}
+                <span className="text-slate-400">(Kwai Chung Depot Meter & Tank Record)</span>
+              </p>
 
               <div className="mb-6 max-w-xs">
                 <Label htmlFor="inventoryDate" required>
@@ -386,91 +404,115 @@ export default function App() {
               </div>
 
               <div className="-mx-1 overflow-x-auto">
-                <table className="w-full min-w-[640px] border-collapse text-sm">
+                <table className="w-full min-w-[720px] border-collapse text-sm">
                   <thead>
                     <tr className="border-b border-slate-200 bg-slate-50">
-                      <th className="px-2 py-3 text-left font-semibold text-slate-700">
-                        油錶編號 <span className="block text-xs font-normal text-slate-500">Meter Code</span>
+                      <th className="border-r border-slate-200 px-2 py-3 text-left font-semibold text-slate-700">
+                        油品 <span className="block text-xs font-normal text-slate-500">Fuel Type</span>
                       </th>
-                      <th className="px-2 py-3 text-left font-semibold text-slate-700">
+                      <th className="border-r border-slate-200 px-2 py-3 text-left font-semibold text-slate-700">
+                        油錶編號 <span className="block text-xs font-normal text-slate-500">Meter No.</span>
+                      </th>
+                      <th className="border-r border-slate-200 px-2 py-3 text-left font-semibold text-slate-700">
                         昨日收工錶碼 <span className="block text-xs font-normal text-slate-500">Yesterday</span>
                       </th>
-                      <th className="px-2 py-3 text-left font-semibold text-slate-700">
+                      <th className="border-r border-slate-200 px-2 py-3 text-left font-semibold text-slate-700">
                         今日收工錶碼 <span className="block text-xs font-normal text-slate-500">Today *</span>
                       </th>
-                      <th className="px-2 py-3 text-left font-semibold text-slate-700">
+                      <th className="border-r border-slate-200 px-2 py-3 text-left font-semibold text-slate-700">
                         油缸 <span className="block text-xs font-normal text-slate-500">Tank</span>
                       </th>
                       <th className="px-2 py-3 text-left font-semibold text-slate-700">
-                        存油量 <span className="block text-xs font-normal text-slate-500">Storage Volume</span>
+                        結存 <span className="block text-xs font-normal text-slate-500">Closing Balance</span>
                       </th>
                     </tr>
                   </thead>
                   <tbody>
-                    {inventoryRows.map((row, index) => (
-                      <tr
-                        key={row.meterCode}
-                        className="border-b border-slate-100 last:border-0"
-                      >
-                        <td className="px-2 py-2">
-                          <span className="inline-flex rounded-md bg-slate-100 px-2.5 py-1.5 font-medium text-slate-800">
-                            {row.meterCode}
-                          </span>
-                        </td>
-                        <td className="px-2 py-2">
-                          <input
-                            type="number"
-                            inputMode="decimal"
-                            step="any"
-                            min="0"
-                            value={row.yesterdayReading}
-                            onChange={(e) =>
-                              updateInventoryRow(index, "yesterdayReading", e.target.value)
-                            }
-                            className={inputBase}
-                            placeholder="0"
-                            aria-label={`昨日收工錶碼 ${row.meterCode}`}
-                          />
-                        </td>
-                        <td className="px-2 py-2">
-                          <input
-                            type="number"
-                            inputMode="decimal"
-                            step="any"
-                            min="0"
-                            value={row.todayReading}
-                            onChange={(e) =>
-                              updateInventoryRow(index, "todayReading", e.target.value)
-                            }
-                            className={`${inputBase} ${errors[`inv-today-${index}`] ? inputError : ""}`}
-                            placeholder="0"
-                            aria-required="true"
-                            aria-label={`今日收工錶碼 ${row.meterCode}`}
-                          />
-                          <FieldError message={errors[`inv-today-${index}`]} />
-                        </td>
-                        <td className="px-2 py-2">
-                          <span className="inline-flex rounded-md bg-slate-100 px-2.5 py-1.5 font-medium text-slate-800">
-                            {row.tank}
-                          </span>
-                        </td>
-                        <td className="px-2 py-2">
-                          <input
-                            type="number"
-                            inputMode="decimal"
-                            step="any"
-                            min="0"
-                            value={row.height}
-                            onChange={(e) =>
-                              updateInventoryRow(index, "height", e.target.value)
-                            }
-                            className={inputBase}
-                            placeholder="0"
-                            aria-label={`存油量 ${row.meterCode}`}
-                          />
-                        </td>
-                      </tr>
-                    ))}
+                    {INVENTORY_METER_DEFS.map((def) => {
+                      const row = inventoryRows.find((r) => r.rowId === def.rowId)!;
+                      return (
+                        <tr
+                          key={def.rowId}
+                          className="border-b border-slate-100 last:border-0"
+                        >
+                          {def.showFuelType && (
+                            <td
+                              rowSpan={def.fuelTypeRowSpan}
+                              className="border-r border-slate-100 bg-slate-50/50 px-2 py-2 align-middle"
+                            >
+                              <span className="font-medium text-slate-800">{def.fuelType}</span>
+                            </td>
+                          )}
+                          <td className="border-r border-slate-100 px-2 py-2">
+                            <span className="inline-flex min-w-[2rem] justify-center rounded-md bg-slate-100 px-2.5 py-1.5 font-medium text-slate-800">
+                              {def.meterCode}
+                            </span>
+                          </td>
+                          <td className="border-r border-slate-100 px-2 py-2">
+                            <input
+                              type="number"
+                              inputMode="decimal"
+                              step="any"
+                              min="0"
+                              value={row.yesterdayReading}
+                              onChange={(e) =>
+                                updateInventoryRow(def.rowId, "yesterdayReading", e.target.value)
+                              }
+                              className={inputBase}
+                              placeholder="0"
+                              aria-label={`昨日收工錶碼 ${def.meterCode}`}
+                            />
+                          </td>
+                          <td className="border-r border-slate-100 px-2 py-2">
+                            <input
+                              type="number"
+                              inputMode="decimal"
+                              step="any"
+                              min="0"
+                              value={row.todayReading}
+                              onChange={(e) =>
+                                updateInventoryRow(def.rowId, "todayReading", e.target.value)
+                              }
+                              className={`${inputBase} ${errors[`inv-today-${def.rowId}`] ? inputError : ""}`}
+                              placeholder="0"
+                              aria-required="true"
+                              aria-label={`今日收工錶碼 ${def.meterCode}`}
+                            />
+                            <FieldError message={errors[`inv-today-${def.rowId}`]} />
+                          </td>
+                          {def.showTank && (
+                            <td
+                              rowSpan={def.tankRowSpan}
+                              className="border-r border-slate-100 bg-slate-50/30 px-2 py-2 align-middle text-center"
+                            >
+                              <span className="inline-flex rounded-md bg-slate-100 px-2.5 py-1.5 font-medium text-slate-800">
+                                {def.tank}
+                              </span>
+                            </td>
+                          )}
+                          {def.showClosingBalance && (
+                            <td
+                              rowSpan={def.closingBalanceRowSpan}
+                              className="px-2 py-2 align-middle"
+                            >
+                              <input
+                                type="number"
+                                inputMode="decimal"
+                                step="any"
+                                min="0"
+                                value={tankClosingBalances[def.tank] ?? ""}
+                                onChange={(e) =>
+                                  updateTankClosingBalance(def.tank, e.target.value)
+                                }
+                                className={inputBase}
+                                placeholder="0"
+                                aria-label={`結存 油缸 ${def.tank}`}
+                              />
+                            </td>
+                          )}
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>

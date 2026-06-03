@@ -10,7 +10,7 @@ Add **5 tabs** at the bottom (rename the default sheet and add others). Tab name
 
 | Tab name   | Record type                          |
 |------------|--------------------------------------|
-| `Inventory` | 油桶 & 缸存記錄                      |
+| `Inventory` | 油錶 (Oil Meter)                     |
 | `Company`   | 公司車輛上油記錄                     |
 | `SelfUse`   | 自用燃油記錄                         |
 | `Customer`  | 客戶車輛上油記錄                     |
@@ -20,9 +20,9 @@ Add **5 tabs** at the bottom (rename the default sheet and add others). Tab name
 
 ### Tab: `Inventory`
 
-| A | B | C | D | E | F | G | H | I |
-|---|---|---|---|---|---|---|---|---|
-| Submission DateTime | Record Date | Meter Code | Tank | Yesterday Reading | Today Reading | Storage Volume | Signature | Remarks |
+| A | B | C | D | E | F | G | H | I | J |
+|---|---|---|---|---|---|---|---|---|---|
+| Submission DateTime | Record Date | Fuel Type | Meter No. | Tank | Yesterday Reading | Today Reading | Closing Balance | Signature | Remarks |
 
 ### Tabs: `Company`, `SelfUse`, `Customer`
 
@@ -70,7 +70,7 @@ npm run dev
 1. Open the form, pick a record type, fill required fields, submit
 2. Check the matching tab in your Google Sheet — new rows should appear
 
-**Inventory:** one submission adds **6 rows** (one per meter: B5, 白渣, 紅渣, B100, 電油, HVO).
+**Inventory:** one submission adds **9 rows** (meters: 1, 2, 2A, 3, 3A, 4, 4A, 5, 6). Closing balance is per tank (shared for 2/2A, 3/3A, 4/4A).
 
 **Other types:** one row per entry in the form.
 
